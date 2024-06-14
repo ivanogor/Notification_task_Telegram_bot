@@ -31,10 +31,9 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             logger.info("Processing update: {}", update);
             String text = update.message().text();
             long chatId = update.message().chat().id();
-            //will add more case for switch
-            switch (text) {
-                case "/start" ->
-                        telegramBot.execute(new SendMessage(chatId, "Привет, этот телеграмм бот поможет тебе создать напоминание."));
+
+            if (text.equals("/start")) {
+                telegramBot.execute(new SendMessage(chatId, "Привет, этот телеграмм бот поможет тебе создать напоминание."));
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
