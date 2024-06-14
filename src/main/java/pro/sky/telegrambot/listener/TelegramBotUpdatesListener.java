@@ -33,7 +33,8 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
             long chatId = update.message().chat().id();
             //will add more case for switch
             switch (text) {
-                case "/start" -> telegramBot.execute(new SendMessage(chatId, "Привет, этот телеграмм бот поможет тебе создать напоминание."));
+                case "/start" ->
+                        telegramBot.execute(new SendMessage(chatId, "Привет, этот телеграмм бот поможет тебе создать напоминание."));
             }
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
