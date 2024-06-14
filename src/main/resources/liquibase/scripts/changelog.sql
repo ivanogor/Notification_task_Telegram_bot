@@ -3,6 +3,6 @@
 --changeset ivanogor:1
 CREATE TABLE notification_task(
     chat_id SERIAL PRIMARY KEY,
-    text TEXT NOT NULL,
+    task TEXT NOT NULL,
     date DATE NOT NULL
 )
