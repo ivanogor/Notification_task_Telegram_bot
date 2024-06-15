@@ -49,9 +49,12 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                 Matcher matcher = pattern.matcher(text);
 
                 if(matcher.matches()) {
+                    logger.info("Message match with the pattern was found");
+
                     String dateTimeString = matcher.group(1);
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
                     LocalDateTime date = LocalDateTime.parse(dateTimeString, formatter);
+                    logger.info("Date is parsed");
 
                     String task = matcher.group(3);
 
@@ -60,8 +63,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
                             .task(task)
                             .date(date)
                             .build();
+                    logger.info("Entity is created");
 
                     notificationTaskRepository.save(notificationTask);
+                    logger.info("Notification is saved in database");
                 }
             }
         });
