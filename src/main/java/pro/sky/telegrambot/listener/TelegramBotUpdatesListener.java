@@ -16,6 +16,7 @@ import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,41 +37,67 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
 
     @Override
     public int process(List<Update> updates) {
-        updates.forEach(update -> {
+        updates.forEach(this::processUpdate);
+        return UpdatesListener.CONFIRMED_UPDATES_ALL;
+    }
+
+    private void processUpdate(Update update) {
+        try {
             logger.info("Processing update: {}", update);
-            Message message =  (update.message() != null) ? update.message() : update.editedMessage();
+            Message message = getMessage(update);
+            if (message == null) {
+                logger.warn("Message or editedMessage is null in update: {}", update);
+                return;
+            }
+
             String text = message.text();
             long chatId = message.chat().id();
 
             if (text.equals("/start")) {
-                telegramBot.execute(new SendMessage(chatId, "Привет, этот телеграмм бот поможет тебе создать напоминание. Напиши сообщение типа \"01.01.2022 20:00 Сделать домашнюю работу\"."));
+                sendWelcomeMessage(chatId);
             } else {
-                Pattern pattern = Pattern.compile("([0-9\\.\\:\\s]{16})(\\s)([\\W+]+)");
-                Matcher matcher = pattern.matcher(text);
-
-                if(matcher.matches()) {
-                    logger.info("Message match with the pattern was found");
-
-                    String dateTimeString = matcher.group(1);
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-                    LocalDateTime date = LocalDateTime.parse(dateTimeString, formatter);
-                    logger.info("Date is parsed");
-
-                    String task = matcher.group(3);
-
-                    NotificationTask notificationTask = NotificationTask.builder()
-                            .chatId(chatId)
-                            .task(task)
-                            .date(date)
-                            .build();
-                    logger.info("Entity is created");
-
-                    notificationTaskRepository.save(notificationTask);
-                    logger.info("Notification is saved in database");
-                }
+                processNotificationTask(text, chatId);
             }
-        });
-        return UpdatesListener.CONFIRMED_UPDATES_ALL;
+        }
+        catch (Exception e){
+            logger.error("Error processing update: {}", update, e);
+        }
     }
 
+
+    private Message getMessage(Update update) {
+        return Optional.ofNullable(update.message()).orElse(update.editedMessage());
+    }
+
+    private void sendWelcomeMessage(long chatId) {
+        telegramBot.execute(new SendMessage(chatId,
+                "Привет, этот телеграмм бот поможет тебе создать напоминание. " +
+                        "Напиши сообщение типа \"01.01.2022 20:00 Сделать домашнюю работу\"."));
+    }
+
+    private void processNotificationTask(String text, long chatId) {
+        Pattern pattern = Pattern.compile("([0-9.:\\s]{16})(\\s)([\\W+]+)");
+        Matcher matcher = pattern.matcher(text);
+
+        if (matcher.matches()) {
+            logger.info("Message match with the pattern was found");
+
+            String dateTimeString = matcher.group(1);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+            LocalDateTime date = LocalDateTime.parse(dateTimeString, formatter);
+            logger.info("Date is parsed");
+
+            String task = matcher.group(3);
+
+            NotificationTask notificationTask = NotificationTask.builder()
+                    .chatId(chatId)
+                    .task(task)
+                    .date(date)
+                    .build();
+            logger.info("Entity is created");
+
+            notificationTaskRepository.save(notificationTask);
+            logger.info("Notification is saved in database");
+        }
+    }
 }
