@@ -21,7 +21,7 @@ This project is a Telegram bot built using Spring Boot that serves as a task rem
 
 ## Prerequisites
 
-- Java 11 or later
+- Java 21 or later
 - Maven or Gradle
 - PostgreSQL
 - Telegram Bot Token (from [BotFather](https://t.me/botfather))
